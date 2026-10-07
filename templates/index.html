@@ -68,6 +68,40 @@
         ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
         ::-webkit-scrollbar-thumb { background: rgba(52, 211, 153, 0.3); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(52, 211, 153, 0.6); }
+        /* --- Адаптивность для телефонов --- */
+    @media (max-width: 768px) {
+        body {
+            flex-direction: column !important;
+            overflow-y: auto !important;
+        }
+        aside {
+            width: 100% !important;
+            max-height: 50vh;
+            margin-bottom: 10px;
+        }
+        main {
+            height: auto !important;
+            padding: 16px !important;
+        }
+    }
+
+    /* --- Улучшение шрифтов и иерархии --- */
+    .msg-content p {
+        font-size: 16px !important;
+        line-height: 1.7 !important;
+        margin-bottom: 12px;
+    }
+    .msg-content strong {
+        color: #34D399 !important;
+        font-weight: 700;
+    }
+    .msg-content h3 {
+        font-size: 18px !important;
+        font-weight: 800;
+        color: #6EE7B7 !important;
+        margin-top: 16px;
+        margin-bottom: 8px;
+    }
     </style>
 </head>
 <body class="glow-bg flex h-screen overflow-hidden text-slate-100">
