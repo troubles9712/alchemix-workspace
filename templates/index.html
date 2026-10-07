@@ -11,11 +11,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-<style>
+
+    <style>
         html, body {
             background-color: #040711 !important;
             color: #F8FAFC !important;
             font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100%;
             margin: 0;
             font-size: 16px;
         }
@@ -30,7 +32,7 @@
         }
 
         .glass-panel {
-            background: rgba(13, 20, 36, 0.85) !important;
+            background: rgba(13, 20, 36, 0.95) !important;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(52, 211, 153, 0.25) !important;
@@ -83,50 +85,25 @@
             margin-top: 16px;
             margin-bottom: 8px;
         }
-
-        /* --- ЖЕСТКАЯ АДАПТИВНОСТЬ ДЛЯ ТЕЛЕФОНОВ --- */
-        @media (max-width: 768px) {
-            /* Отключаем фиксированный экран на компе, разрешаем странице скроллиться */
-            html, body {
-                height: auto !important;
-                overflow-y: auto !important;
-            }
-            body.glow-bg {
-                display: block !important; /* Убираем flex, чтобы блоки шли друг за другом */
-            }
-            aside {
-                width: 100% !important;
-                height: auto !important;
-                max-height: none !important;
-                margin-bottom: 15px;
-            }
-            main {
-                height: auto !important;
-                min-height: 70vh !important;
-                padding: 12px !important;
-                margin: 0 !important;
-                width: 100% !important;
-                overflow: visible !important;
-            }
-            #chatBox {
-                height: 450px !important; /* Фиксируем удобную высоту окна чата с прокруткой */
-                max-height: none !important;
-            }
-        }
-    </style>     
+    </style>
 </head>
-<body class="glow-bg block md:flex md:h-screen md:overflow-hidden text-slate-100"> 
-    <!-- Sidebar -->
-    <aside class="w-80 glass-panel border-r border-emerald-500/30 p-6 flex flex-col justify-between z-20 flex-shrink-0">
+<body class="glow-bg flex h-screen overflow-hidden text-slate-100">
+
+    <!-- Sidebar (на мобилке скрыт по умолчанию через класс hidden, открывается по кнопке) -->
+    <aside id="sidebar" class="hidden md:flex w-80 glass-panel border-r border-emerald-500/30 p-6 flex-col justify-between z-50 flex-shrink-0 absolute md:relative inset-y-0 left-0 h-full shadow-2xl">
         <div class="space-y-4 overflow-y-auto pr-1">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-500 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/30">
-                    ⚗️
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-500 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/30">
+                        ⚗️
+                    </div>
+                    <div>
+                        <h1 class="font-grotesk text-2xl font-extrabold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">Alchemix</h1>
+                        <p class="text-xs text-slate-400 font-medium">AI Chemistry Workspace</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="font-grotesk text-2xl font-extrabold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">Alchemix</h1>
-                    <p class="text-xs text-slate-400 font-medium">AI Chemistry Workspace</p>
-                </div>
+                <!-- Кнопка закрытия сайдбара на мобилке -->
+                <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-400 hover:text-slate-100 text-lg font-bold p-1">✕</button>
             </div>
 
             <button onclick="createNewChat()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/10 hover:from-emerald-500/35 hover:to-teal-500/25 border border-emerald-500/40 text-emerald-300 font-bold transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98]">
@@ -135,10 +112,10 @@
 
             <div>
                 <label class="text-xs font-bold text-emerald-400/90 tracking-wider uppercase mb-1 block">Recents</label>
-                <div id="recentsList" class="space-y-1 max-h-24 overflow-y-auto pr-1"></div>
+                <div id="recentsList" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
             </div>
 
-            <div class="space-y-3">
+            <div class="space-y-3 pt-2 border-t border-emerald-500/20">
                 <div class="flex justify-between items-center">
                     <span class="text-xs text-slate-300 font-semibold">Target Level:</span>
                     <span id="levelLabel" class="text-xs font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30">High School</span>
@@ -159,28 +136,35 @@
             </div>
         </div>
 
-        <div class="text-[11px] text-slate-500 text-center font-medium pt-1">
+        <div class="text-[11px] text-slate-500 text-center font-medium pt-2">
             Powered by Gemini 3.5 Flash Lite
         </div>
     </aside>
 
     <!-- Main Workspace -->
-    <main class="flex-1 flex flex-col p-6 max-w-5xl mx-auto w-full h-screen overflow-hidden relative">
-        <div class="glass-panel rounded-2xl p-4 mb-4 relative overflow-hidden flex-shrink-0 flex justify-between items-center">
+    <main class="flex-1 flex flex-col p-4 md:p-8 max-w-5xl mx-auto w-full h-screen overflow-hidden relative">
+        <div class="glass-panel rounded-2xl p-4 mb-4 relative overflow-hidden flex-shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
             <div class="absolute -right-10 -top-10 w-48 h-48 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
-            <div>
-                <h2 class="font-grotesk text-2xl font-extrabold bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">⚗️ Alchemix Workspace</h2>
-                <p class="text-slate-400 text-xs font-medium mt-0.5">Interactive AI Chemistry Workspace & Academic Problem Solver</p>
+            
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between">
+                <div>
+                    <h2 class="font-grotesk text-xl md:text-2xl font-extrabold bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">⚗️ Alchemix Workspace</h2>
+                    <p class="text-slate-400 text-xs font-medium">Interactive AI Chemistry Workspace</p>
+                </div>
+                <!-- Кнопка Меню для мобильных устройств -->
+                <button onclick="toggleMobileSidebar()" class="md:hidden px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center gap-1 active:scale-95">
+                    <span>☰</span> Menu
+                </button>
             </div>
             
-            <div class="flex items-center gap-2">
-                <button onclick="toggleMolarModal()" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 font-bold text-xs transition-all flex items-center gap-1 active:scale-95">
+            <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+                <button onclick="toggleMolarModal()" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 font-bold text-xs transition-all flex items-center gap-1 flex-shrink-0 active:scale-95">
                     <span>🧮</span> Molar Mass
                 </button>
-                <button onclick="togglePeriodicModal()" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition-all flex items-center gap-1 active:scale-95">
+                <button onclick="togglePeriodicModal()" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition-all flex items-center gap-1 flex-shrink-0 active:scale-95">
                     <span>🧪</span> Periodic Table
                 </button>
-                <button onclick="exportNotes()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold text-xs transition-all flex items-center gap-1 active:scale-95">
+                <button onclick="exportNotes()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold text-xs transition-all flex items-center gap-1 flex-shrink-0 active:scale-95">
                     <span>📥</span> Export
                 </button>
             </div>
@@ -209,10 +193,10 @@
                 <h3 class="font-grotesk text-xl font-bold text-emerald-400 flex items-center gap-2">🧪 Full Interactive Periodic Table</h3>
                 <button onclick="togglePeriodicModal()" class="text-slate-400 hover:text-slate-100 font-bold text-lg">✕</button>
             </div>
-            <div class="grid grid-cols-3 gap-4">
-                <div class="col-span-2">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
                     <p class="text-xs text-slate-400 mb-2">Click an element to view detailed properties:</p>
-                    <div id="periodicGrid" class="grid grid-cols-8 gap-1.5 text-center text-xs max-h-[380px] overflow-y-auto p-1"></div>
+                    <div id="periodicGrid" class="grid grid-cols-6 md:grid-cols-8 gap-1.5 text-center text-xs max-h-[380px] overflow-y-auto p-1"></div>
                 </div>
                 <div id="elementInspector" class="bg-slate-900/90 rounded-2xl p-4 border border-emerald-500/30 flex flex-col justify-between">
                     <div>
@@ -305,6 +289,12 @@
             {n:92, s:'U', name:'Uranium', mass:'238.03', cat:'transition'}
         ];
 
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('flex');
+        }
+
         function buildPeriodicGrid() {
             const container = document.getElementById('periodicGrid');
             container.innerHTML = '';
@@ -363,6 +353,7 @@
         function handleFile(input) {
             if(input.files && input.files[0]) {
                 const file = input.files[0];
+                document.getElementById('fileName').innerText = '📄 ' + file.name;
                 const reader = new FileReader();
                 reader.onload = function(e) { attachedBase64 = e.target.result; };
                 reader.readAsDataURL(file);
@@ -421,7 +412,10 @@
                 const chat = chats[id];
                 const isActive = id === activeChatId;
                 const btn = document.createElement('button');
-                btn.onclick = () => switchChat(id);
+                btn.onclick = () => {
+                    switchChat(id);
+                    if(window.innerWidth < 768) toggleMobileSidebar(); // Закрывать сайдбар на мобилке при клике на чат
+                };
                 btn.className = `w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold truncate flex items-center gap-2 transition-all ${
                     isActive ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shadow-md' : 'hover:bg-slate-800/60 text-slate-400'
                 }`;
@@ -436,9 +430,10 @@
             const currentChat = chats[activeChatId];
             if(!currentChat || currentChat.history.length === 0) {
                 chatBox.innerHTML = `
-                    <div class="p-5 glass-panel rounded-2xl">
-                        <h3 class="text-emerald-400 font-bold text-base font-grotesk">Welcome to Alchemix Workspace</h3>
-                        <p class="text-sm text-slate-300 mt-1">Ask questions, attach images/homework, or use built-in chemistry tools above!</p>
+                    <div class="p-6 glass-panel rounded-2xl space-y-2">
+                        <h3 class="text-emerald-400 font-bold text-lg font-grotesk">Welcome to Alchemix Workspace</h3>
+                        <p class="text-sm text-slate-300">Ask questions, attach images/homework, or use built-in chemistry tools above!</p>
+                        <div class="text-xs text-emerald-400/80 font-medium pt-1">💡 Tip: You can calculate molar masses or use the periodic table anytime from the top bar.</div>
                     </div>`;
                 return;
             }
