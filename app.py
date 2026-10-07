@@ -33,6 +33,7 @@ RULES:
 1. Tailor depth precisely to the user's selected Target Difficulty Level.
 2. Always use LaTeX formatting for formulas and equations (e.g., $H_2SO_4$, $\Delta H$).
 3. Respond ONLY to the user's specific statement or question. Do NOT assume specific advanced topics unless mentioned.
+CRITICAL RULE: Never repeat greetings ("Hello!", "Hey there!", etc.) after the first message in a session. Directly answer the user's questions with high precision, use proper formatting, and maintain a professional yet engaging tone."""
 """
 
 def get_knowledge_base():
