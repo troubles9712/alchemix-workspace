@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alchemix | AI Chemistry Workspace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        html, body {
+            background-color: #040711 !important;
+            color: #F8FAFC !important;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100%;
+            margin: 0;
+            font-size: 15px;
+        }
+        .font-grotesk { font-family: 'Space Grotesk', sans-serif; }
+
+        .glow-bg {
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.22) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.2) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+                #040711 !important;
+        }
+
+        .glass-panel {
+            background: rgba(13, 20, 36, 0.85) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(52, 211, 153, 0.25) !important;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: linear-gradient(90deg, #10B981 0%, #34D399 50%, #818CF8 100%);
+            border-radius: 10px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #00FF9D;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -6px;
+            box-shadow: 0 0 15px #00FF9D;
+            border: 2px solid #040711;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(52, 211, 153, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(52, 211, 153, 0.6); }
+    </style>
+</head>
+<body class="glow-bg flex h-screen overflow-hidden text-slate-100">
+
+    <!-- Sidebar -->
+    <aside class="w-80 glass-panel border-r border-emerald-500/30 p-6 flex flex-col justify-between z-20 flex-shrink-0">
+        <div class="space-y-6 overflow-y-auto pr-1">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-500 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/30">
+                    ⚗️
+                </div>
+                <div>
+                    <h1 class="font-grotesk text-2xl font-extrabold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">Alchemix</h1>
+                    <p class="text-xs text-slate-400 font-medium">AI Chemistry Workspace</p>
+                </div>
+            </div>
+
+            <button onclick="createNewChat()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/10 hover:from-emerald-500/35 hover:to-teal-500/25 border border-emerald-500/40 text-emerald-300 font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/15 hover:shadow-emerald-500/30 active:scale-[0.98]">
+                <span>✨</span> New Session
+            </button>
+
+            <div>
+                <label class="text-xs font-bold text-emerald-400/90 tracking-wider uppercase mb-2 block">Recents</label>
+                <div id="recentsList" class="space-y-1.5 max-h-36 overflow-y-auto pr-1"></div>
+            </div>
+
+            <hr class="border-emerald-500/20">
+
+            <div class="space-y-5">
+                <h3 class="text-xs font-bold text-emerald-400 tracking-wider uppercase flex items-center gap-2">
+                    ⚙️ Settings & Level
+                </h3>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs text-slate-300 font-semibold">Target Level:</span>
+                        <span id="levelLabel" class="text-xs font-bold text-emerald-400 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-500/30">High School</span>
+                    </div>
+                    <input type="range" id="levelRange" min="0" max="3" step="1" value="1" oninput="updateLevel(this.value)">
+                    <div class="flex justify-between text-[11px] text-slate-400 mt-1.5 font-medium">
+                        <span>Middle</span>
+                        <span>High</span>
+                        <span>AP/IB</span>
+                        <span>College</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs text-slate-300 font-semibold mb-1.5 block">Study Mode:</label>
+                    <select id="modeSelect" class="w-full bg-slate-900/90 border border-emerald-500/30 rounded-xl p-2.5 text-xs text-slate-200 focus:border-emerald-400 outline-none transition-all">
+                        <option value="General Theory & Concepts">General Theory & Concepts</option>
+                        <option value="Step-by-Step Problem Solving">Step-by-Step Problem Solving</option>
+                        <option value="Reaction Mechanisms & Curved Arrows">Reaction Mechanisms</option>
+                        <option value="Reaction Balancing & Redox">Reaction Balancing & Redox</option>
+                        <option value="Exam Prep & Practice Quiz">Exam Prep & Practice Quiz</option>
+                        <option value="Lab Assistant & Safety">Lab Assistant & Safety</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-xs text-slate-300 font-semibold mb-1.5 block">Attach Homework / Image:</label>
+                    <label class="w-full flex flex-col items-center justify-center p-3 border-2 border-dashed border-emerald-500/30 rounded-xl cursor-pointer hover:border-emerald-400 hover:bg-emerald-500/5 transition-all text-center">
+                        <span class="text-xl mb-1">📎</span>
+                        <span id="fileName" class="text-xs text-slate-400 font-medium">Click or Drag Image / PDF</span>
+                        <input type="file" id="fileInput" accept="image/*,.pdf" class="hidden" onchange="handleFile(this)">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-xs text-slate-500 text-center font-medium pt-2">
+            Powered by Gemini 3.5 Flash Lite
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex flex-col p-8 max-w-5xl mx-auto w-full h-screen overflow-hidden relative">
+        <div class="glass-panel rounded-2xl p-6 mb-6 relative overflow-hidden flex-shrink-0 flex justify-between items-center">
+            <div class="absolute -right-10 -top-10 w-48 h-48 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div>
+                <h2 class="font-grotesk text-3xl font-extrabold bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">⚗️ Alchemix Workspace</h2>
+                <p class="text-slate-400 text-sm font-medium mt-1">Interactive AI Chemistry Workspace & Academic Problem Solver</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="toggleMolarModal()" class="px-3.5 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 font-bold text-xs transition-all flex items-center gap-1.5 shadow-lg active:scale-95">
+                    <span>🧮</span> Molar Mass
+                </button>
+                <button onclick="togglePeriodicModal()" class="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition-all flex items-center gap-1.5 shadow-lg active:scale-95">
+                    <span>🧪</span> Periodic Table
+                </button>
+                <button onclick="exportNotes()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold text-xs transition-all flex items-center gap-1.5 active:scale-95">
+                    <span>📥</span> Export
+                </button>
+            </div>
+        </div>
+
+        <div id="chatBox" class="flex-1 overflow-y-auto space-y-4 pr-2 mb-6"></div>
+
+        <div class="glass-panel rounded-2xl p-2 border border-emerald-500/40 focus-within:border-emerald-400 focus-within:shadow-[0_0_30px_rgba(16,185,129,0.35)] transition-all flex items-center gap-3 shadow-2xl flex-shrink-0">
+            <button onclick="document.getElementById('fileInput').click()" class="text-slate-400 hover:text-emerald-400 p-2 text-xl transition-colors" title="Attach image or file">
+                📎
+            </button>
+            <input id="userInput" type="text" placeholder="Ask a chemistry question, equation, or attach homework..." 
+                   class="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm outline-none px-1"
+                   onkeydown="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()" class="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold px-6 py-3 rounded-xl transition-all shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98]">
+                Send
+            </button>
+        </div>
+    </main>
+
+    <!-- Extended Periodic Table Modal Popup -->
+    <div id="periodicModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
+        <div class="glass-panel rounded-3xl p-6 max-w-5xl w-full border border-emerald-500/40 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-grotesk text-xl font-bold text-emerald-400 flex items-center gap-2">🧪 Full Interactive Periodic Table</h3>
+                <button onclick="togglePeriodicModal()" class="text-slate-400 hover:text-slate-100 font-bold text-lg">✕</button>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-2">
+                    <p class="text-xs text-slate-400 mb-2">Click an element to view detailed properties:</p>
+                    <div id="periodicGrid" class="grid grid-cols-8 gap-1.5 text-center text-xs max-h-[380px] overflow-y-auto p-1"></div>
+                </div>
+                <div id="elementInspector" class="bg-slate-900/90 rounded-2xl p-4 border border-emerald-500/30 flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs text-emerald-400 font-bold uppercase tracking-wider mb-2">Element Inspector</div>
+                        <div id="inspectorContent" class="space-y-2">
+                            <div class="text-4xl font-extrabold text-emerald-300">Li</div>
+                            <div class="text-lg font-bold text-slate-200">Lithium</div>
+                            <div class="text-xs text-slate-400">Atomic Number: <span class="text-slate-200">3</span></div>
+                            <div class="text-xs text-slate-400">Atomic Mass: <span class="text-slate-200">6.94 u</span></div>
+                            <div class="text-xs text-slate-400">Category: <span class="text-amber-400 font-semibold">Alkali Metal</span></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 mt-4">
+                        <button onclick="askAboutElement()" class="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs rounded-xl transition-all">✨ Ask AI About Element</button>
+                        <button onclick="pasteElementSymbol()" class="w-full py-2 bg-slate-800 text-slate-300 text-xs rounded-xl font-semibold transition-all">📎 Paste Symbol</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Molar Mass Calculator Modal -->
+    <div id="molarModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
+        <div class="glass-panel rounded-3xl p-6 max-w-md w-full border border-indigo-500/40 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-grotesk text-xl font-bold text-indigo-400 flex items-center gap-2">🧮 Molar Mass Calculator</h3>
+                <button onclick="toggleMolarModal()" class="text-slate-400 hover:text-slate-100 font-bold text-lg">✕</button>
+            </div>
+            <p class="text-xs text-slate-400">Enter chemical formula (e.g., H2SO4, KMnO4, C6H12O6, NaCl):</p>
+            <input id="molarInput" type="text" placeholder="e.g. H2SO4" class="w-full bg-slate-900 border border-indigo-500/40 rounded-xl p-3 text-sm outline-none text-slate-100 tracking-wider font-bold">
+            <button onclick="calculateMolarMass()" class="w-full py-3 bg-indigo-500 hover:bg-indigo-400 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/30">Calculate Mass</button>
+            <div id="molarResult" class="hidden p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-center">
+                <div class="text-xs text-slate-400">Total Molar Mass:</div>
+                <div id="molarVal" class="text-2xl font-extrabold text-indigo-300 font-grotesk mt-1">--</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const levels = ["Middle School", "High School", "AP/IB / AS-Level", "College / Olympiad"];
+        let chats = JSON.parse(localStorage.getItem('alchemix_chats')) || {};
+        let activeChatId = localStorage.getItem('alchemix_active_id') || null;
+        let attachedBase64 = null;
+        let selectedElementData = { s: 'Li', name: 'Lithium', n: 3, mass: '6.94', cat: 'Alkali Metal' };
+
+        // Complete atomic weights dictionary
+        const atomicWeights = {
+            H:1.008, He:4.003, Li:6.94, Be:9.012, B:10.81, C:12.011, N:14.007, O:15.999, F:18.998, Ne:20.180,
+            Na:22.990, Mg:24.305, Al:26.982, Si:28.085, P:30.974, S:32.06, Cl:35.45, Ar:39.948, K:39.098, Ca:40.078,
+            Sc:44.956, Ti:47.867, V:50.942, Cr:51.996, Mn:54.938, Fe:55.845, Co:58.933, Ni:58.693, Cu:63.546, Zn:65.38,
+            Ga:69.723, Ge:72.63, As:74.922, Se:78.971, Br:79.904, Kr:83.798, Rb:85.468, Sr:87.62, Y:88.906, Zr:91.224,
+            Ag:107.87, Cd:112.41, Sn:118.71, I:126.90, Ba:137.33, Pt:195.08, Au:196.97, Hg:200.59, Pb:207.2, U:238.03
+        };
+
+        // Full elements dataset
+        const elementsData = [
+            {n:1, s:'H', name:'Hydrogen', mass:'1.008', cat:'nonmetal'},
+            {n:2, s:'He', name:'Helium', mass:'4.003', cat:'noble'},
+            {n:3, s:'Li', name:'Lithium', mass:'6.94', cat:'alkali'},
+            {n:4, s:'Be', name:'Beryllium', mass:'9.012', cat:'alkaline'},
+            {n:5, s:'B', name:'Boron', mass:'10.81', cat:'metalloid'},
+            {n:6, s:'C', name:'Carbon', mass:'12.011', cat:'nonmetal'},
+            {n:7, s:'N', name:'Nitrogen', mass:'14.007', cat:'nonmetal'},
+            {n:8, s:'O', name:'Oxygen', mass:'15.999', cat:'nonmetal'},
+            {n:9, s:'F', name:'Fluorine', mass:'18.998', cat:'halogen'},
+            {n:10, s:'Ne', name:'Neon', mass:'20.180', cat:'noble'},
+            {n:11, s:'Na', name:'Sodium', mass:'22.990', cat:'alkali'},
+            {n:12, s:'Mg', name:'Magnesium', mass:'24.305', cat:'alkaline'},
+            {n:13, s:'Al', name:'Aluminium', mass:'26.982', cat:'metal'},
+            {n:14, s:'Si', name:'Silicon', mass:'28.085', cat:'metalloid'},
+            {n:15, s:'P', name:'Phosphorus', mass:'30.974', cat:'nonmetal'},
+            {n:16, s:'S', name:'Sulfur', mass:'32.06', cat:'nonmetal'},
+            {n:17, s:'Cl', name:'Chlorine', mass:'35.45', cat:'halogen'},
+            {n:18, s:'Ar', name:'Argon', mass:'39.948', cat:'noble'},
+            {n:19, s:'K', name:'Potassium', mass:'39.098', cat:'alkali'},
+            {n:20, s:'Ca', name:'Calcium', mass:'40.078', cat:'alkaline'},
+            {n:21, s:'Sc', name:'Scandium', mass:'44.956', cat:'transition'},
+            {n:22, s:'Ti', name:'Titanium', mass:'47.867', cat:'transition'},
+            {n:23, s:'V', name:'Vanadium', mass:'50.942', cat:'transition'},
+            {n:24, s:'Cr', name:'Chromium', mass:'51.996', cat:'transition'},
+            {n:25, s:'Mn', name:'Manganese', mass:'54.938', cat:'transition'},
+            {n:26, s:'Fe', name:'Iron', mass:'55.845', cat:'transition'},
+            {n:27, s:'Co', name:'Cobalt', mass:'58.933', cat:'transition'},
+            {n:28, s:'Ni', name:'Nickel', mass:'58.693', cat:'transition'},
+            {n:29, s:'Cu', name:'Copper', mass:'63.546', cat:'transition'},
+            {n:30, s:'Zn', name:'Zinc', mass:'65.38', cat:'transition'},
+            {n:35, s:'Br', name:'Bromine', mass:'79.904', cat:'halogen'},
+            {n:47, s:'Ag', name:'Silver', mass:'107.87', cat:'transition'},
+            {n:53, s:'I', name:'Iodine', mass:'126.90', cat:'halogen'},
+            {n:79, s:'Au', name:'Gold', mass:'196.97', cat:'transition'},
+            {n:80, s:'Hg', name:'Mercury', mass:'200.59', cat:'transition'},
+            {n:92, s:'U', name:'Uranium', mass:'238.03', cat:'transition'}
+        ];
+
+        function buildPeriodicGrid() {
+            const container = document.getElementById('periodicGrid');
+            container.innerHTML = '';
+            elementsData.forEach(e => {
+                const btn = document.createElement('button');
+                btn.onclick = () => inspectElement(e);
+                btn.className = `p-2 rounded-xl border font-bold transition-all text-xs flex flex-col items-center justify-center hover:scale-105 ${
+                    e.cat === 'nonmetal' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' :
+                    e.cat === 'noble' ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300' :
+                    e.cat === 'alkali' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' :
+                    e.cat === 'halogen' ? 'bg-rose-500/20 border-rose-500/40 text-rose-300' :
+                    'bg-teal-500/20 border-teal-500/40 text-teal-300'
+                }`;
+                btn.innerHTML = `<span class="text-[9px] opacity-60">${e.n}</span><span class="text-sm">${e.s}</span><span class="text-[9px] truncate max-w-[50px]">${e.name}</span>`;
+                container.appendChild(btn);
+            });
+        }
+
+        function inspectElement(e) {
+            selectedElementData = e;
+            document.getElementById('inspectorContent').innerHTML = `
+                <div class="text-4xl font-extrabold text-emerald-300">${e.s}</div>
+                <div class="text-lg font-bold text-slate-200">${e.name}</div>
+                <div class="text-xs text-slate-400">Atomic Number: <span class="text-slate-200">${e.n}</span></div>
+                <div class="text-xs text-slate-400">Atomic Mass: <span class="text-slate-200">${e.mass} u</span></div>
+                <div class="text-xs text-slate-400">Category: <span class="text-emerald-400 font-semibold capitalize">${e.cat}</span></div>
+            `;
+        }
+
+        function togglePeriodicModal() { document.getElementById('periodicModal').classList.toggle('hidden'); }
+        function toggleMolarModal() { document.getElementById('molarModal').classList.toggle('hidden'); }
+
+        // Fixed Regex parser respecting case sensitivity (e.g. H2SO4, KMnO4)
+        function calculateMolarMass() {
+            const rawFormula = document.getElementById('molarInput').value.trim();
+            if(!rawFormula) return;
+            
+            let total = 0;
+            const reg = /([A-Z][a-z]*)(\d*)/g;
+            let match;
+            let matchedCount = 0;
+
+            while ((match = reg.exec(rawFormula)) !== null) {
+                const elem = match[1];
+                const count = parseInt(match[2] || "1");
+                if (atomicWeights[elem]) {
+                    total += atomicWeights[elem] * count;
+                    matchedCount++;
+                }
+            }
+
+            if (total > 0 && matchedCount > 0) {
+                document.getElementById('molarVal').innerText = total.toFixed(3) + " g/mol";
+            } else {
+                document.getElementById('molarVal').innerText = "Invalid Formula";
+            }
+            document.getElementById('molarResult').classList.remove('hidden');
+        }
+
+        function handleFile(input) {
+            if(input.files && input.files[0]) {
+                const file = input.files[0];
+                document.getElementById('fileName').innerText = '📄 ' + file.name;
+                const reader = new FileReader();
+                reader.onload = function(e) { attachedBase64 = e.target.result; };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function exportNotes() {
+            const currentChat = chats[activeChatId];
+            if(!currentChat) return;
+            let text = `# Alchemix Chemistry Notes - ${currentChat.title}\n\n`;
+            currentChat.history.forEach(m => {
+                text += `### ${m.role === 'user' ? 'Question' : 'Solution'}:\n${m.content}\n\n---\n\n`;
+            });
+            const blob = new Blob([text], {type: 'text/markdown'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Alchemix_Notes_${Date.now()}.md`;
+            a.click();
+        }
+
+        function initApp() {
+            buildPeriodicGrid();
+            if(Object.keys(chats).length === 0) createNewChat();
+            else {
+                if(!activeChatId || !chats[activeChatId]) activeChatId = Object.keys(chats)[0];
+                renderRecents();
+                renderChatHistory();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('alchemix_chats', JSON.stringify(chats));
+            localStorage.setItem('alchemix_active_id', activeChatId);
+        }
+
+        function createNewChat() {
+            const id = 'chat_' + Date.now();
+            chats[id] = { title: 'New Session', history: [] };
+            activeChatId = id;
+            saveState();
+            renderRecents();
+            renderChatHistory();
+        }
+
+        function switchChat(id) {
+            activeChatId = id;
+            saveState();
+            renderRecents();
+            renderChatHistory();
+        }
+
+        function renderRecents() {
+            const list = document.getElementById('recentsList');
+            list.innerHTML = '';
+            Object.keys(chats).reverse().forEach(id => {
+                const chat = chats[id];
+                const isActive = id === activeChatId;
+                const btn = document.createElement('button');
+                btn.onclick = () => switchChat(id);
+                btn.className = `w-full text-left px-3 py-2 rounded-xl text-xs font-semibold truncate flex items-center gap-2 transition-all ${
+                    isActive ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shadow-md' : 'hover:bg-slate-800/60 text-slate-400'
+                }`;
+                btn.innerHTML = `<span>${isActive ? '🧪' : '📄'}</span> <span class="truncate">${chat.title}</span>`;
+                list.appendChild(btn);
+            });
+        }
+
+        function renderChatHistory() {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML = '';
+            const currentChat = chats[activeChatId];
+            if(!currentChat || currentChat.history.length === 0) {
+                chatBox.innerHTML = `
+                    <div class="p-6 glass-panel rounded-2xl">
+                        <h3 class="text-emerald-400 font-bold text-lg font-grotesk">Welcome to Alchemix Workspace</h3>
+                        <p class="text-sm text-slate-300 mt-1">Ask questions, attach images/homework, or use built-in chemistry tools above!</p>
+                    </div>`;
+                return;
+            }
+            currentChat.history.forEach(msg => appendMessageToUI(msg.role, msg.content));
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const msg = input.value.trim();
+            if(!msg && !attachedBase64) return;
+
+            const currentChat = chats[activeChatId];
+            if(currentChat.history.length === 0) {
+                currentChat.title = msg.length > 20 ? msg.substring(0, 20) + '...' : 'Chemistry Task';
+                renderRecents();
+            }
+
+            const displayMsg = attachedBase64 ? `📎 [Attached File]\n${msg}` : msg;
+            appendMessageToUI('user', displayMsg);
+            currentChat.history.push({role: 'user', content: displayMsg});
+            saveState();
+
+            input.value = '';
+            const fileToSend = attachedBase64;
+            attachedBase64 = null;
+            document.getElementById('fileName').innerText = 'Click or Drag Image / PDF';
+
+            const level = levels[document.getElementById('levelRange').value];
+            const mode = document.getElementById('modeSelect').value;
+            const loadingId = appendLoading();
+
+            try {
+                const apiHistory = currentChat.history.slice(0, -1).map(m => ({
+                    role: m.role === 'user' ? 'user' : 'model',
+                    content: m.content
+                }));
+
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: msg, history: apiHistory, level: level, mode: mode, file: fileToSend })
+                });
+
+                const data = await res.json();
+                document.getElementById(loadingId).remove();
+
+                if(data.status === 'success') {
+                    appendMessageToUI('assistant', data.reply);
+                    currentChat.history.push({role: 'model', content: data.reply});
+                    saveState();
+                } else {
+                    appendMessageToUI('assistant', '⚠️ Error: ' + data.message);
+                }
+            } catch(e) {
+                document.getElementById(loadingId).remove();
+                appendMessageToUI('assistant', '⚠️ Connection error.');
+            }
+        }
+
+        function appendMessageToUI(role, text) {
+            const chatBox = document.getElementById('chatBox');
+            const isUser = role === 'user';
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex flex-col p-5 rounded-2xl border ${isUser ? 'bg-slate-800/90 border-slate-700/80 self-end ml-12' : 'glass-panel border-emerald-500/25 mr-12'}`;
+            msgDiv.innerHTML = `<div class="prose prose-invert text-sm md:text-base leading-relaxed msg-content">${marked.parse(text)}</div>`;
+            chatBox.appendChild(msgDiv);
+            renderMathInElement(msgDiv, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}] });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function appendLoading() {
+            const chatBox = document.getElementById('chatBox');
+            const id = 'loading-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'p-4 glass-panel rounded-2xl text-emerald-400 text-sm font-bold animate-pulse';
+            div.innerText = '⚗️ Transmuting knowledge & analyzing input...';
+            chatBox.appendChild(div);
+            return id;
+        }
+
+        function updateLevel(val) {
+            document.getElementById('levelLabel').innerText = levels[val];
+        }
+
+        function askAboutElement() {
+            togglePeriodicModal();
+            document.getElementById('userInput').value = `Explain the properties, electron configuration, and common reactions of ${selectedElementData.name} (${selectedElementData.s}).`;
+            sendMessage();
+        }
+
+        function pasteElementSymbol() {
+            const input = document.getElementById('userInput');
+            input.value += (input.value ? ' ' : '') + selectedElementData.s;
+            togglePeriodicModal();
+            input.focus();
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
