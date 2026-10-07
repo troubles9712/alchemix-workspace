@@ -69,19 +69,33 @@
         ::-webkit-scrollbar-thumb { background: rgba(52, 211, 153, 0.3); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(52, 211, 153, 0.6); }
         /* --- Адаптивность для телефонов --- */
+/* --- Мобильная адаптивность --- */
     @media (max-width: 768px) {
         body {
             flex-direction: column !important;
+            height: auto !important;
             overflow-y: auto !important;
         }
+        /* Делаем сайдбар компактным или скрываем лишнее, чтобы он не мозолил глаза */
         aside {
             width: 100% !important;
-            max-height: 50vh;
-            margin-bottom: 10px;
+            height: auto !important;
+            max-height: 280px; /* Ограничиваем высоту, чтобы влезала кнопка и пара чатов */
+            margin-bottom: 0 !important;
+            border-right: none !important;
+            border-bottom: 1px solid rgba(52, 211, 153, 0.25);
         }
+        /* Основной блок с чатом поднимаем наверх */
         main {
             height: auto !important;
-            padding: 16px !important;
+            min-height: 80vh;
+            padding: 12px !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+        /* Окно переписки теперь идет сразу после шапки */
+        #chatBox {
+            max-height: 50vh;
         }
     }
 
