@@ -11,13 +11,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-
-    <style>
+<style>
         html, body {
             background-color: #040711 !important;
             color: #F8FAFC !important;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            height: 100%;
             margin: 0;
             font-size: 16px;
         }
@@ -69,7 +67,6 @@
         ::-webkit-scrollbar-thumb { background: rgba(52, 211, 153, 0.3); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(52, 211, 153, 0.6); }
 
-        /* --- Крупные и читаемые шрифты в чате --- */
         .msg-content p {
             font-size: 17px !important;
             line-height: 1.75 !important;
@@ -87,37 +84,38 @@
             margin-bottom: 8px;
         }
 
-        /* --- Адаптивность для телефонов --- */
+        /* --- ЖЕСТКАЯ АДАПТИВНОСТЬ ДЛЯ ТЕЛЕФОНОВ --- */
         @media (max-width: 768px) {
-            body {
-                flex-direction: column !important;
+            /* Отключаем фиксированный экран на компе, разрешаем странице скроллиться */
+            html, body {
                 height: auto !important;
                 overflow-y: auto !important;
+            }
+            body.glow-bg {
+                display: block !important; /* Убираем flex, чтобы блоки шли друг за другом */
             }
             aside {
                 width: 100% !important;
                 height: auto !important;
-                max-height: 220px !important; /* Компактный сайдбар сверху */
-                margin-bottom: 0 !important;
-                border-right: none !important;
-                border-bottom: 1px solid rgba(52, 211, 153, 0.25);
-                padding: 12px !important;
+                max-height: none !important;
+                margin-bottom: 15px;
             }
             main {
                 height: auto !important;
-                min-height: 75vh !important;
+                min-height: 70vh !important;
                 padding: 12px !important;
                 margin: 0 !important;
                 width: 100% !important;
+                overflow: visible !important;
             }
             #chatBox {
-                max-height: 55vh !important; /* Окно чата теперь просторное и всё видно */
+                height: 450px !important; /* Фиксируем удобную высоту окна чата с прокруткой */
+                max-height: none !important;
             }
         }
-    </style>
+    </style>     
 </head>
-<body class="glow-bg flex h-screen overflow-hidden text-slate-100">
-
+<body class="glow-bg block md:flex md:h-screen md:overflow-hidden text-slate-100"> 
     <!-- Sidebar -->
     <aside class="w-80 glass-panel border-r border-emerald-500/30 p-6 flex flex-col justify-between z-20 flex-shrink-0">
         <div class="space-y-4 overflow-y-auto pr-1">
